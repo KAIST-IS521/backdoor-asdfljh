@@ -10,70 +10,134 @@
 #define NUM_FUNCS  (256)
 #define NUM_INSTR  (256)
 
-#define DEBUG 1
+//#define REG_DEBUG 1
+//#define PRINT_INSTRUCTION 1
+//#define MEMORY_DEBUG 1
 
 // Global variable that indicates if the process is running.
 static bool is_running = true;
 
 uint8_t *ptr_m;
+uint32_t *ep;
+uint32_t *pc;
 
-void usageExit() {
+void usageExit()
+{
     // TODO: show usage
 	printf("USAGE: interpreter [bytecode FILE]\n");
     exit(1);
 }
 
-void halt(struct VMContext* ctx, const uint32_t instr) {
+void halt(struct VMContext* ctx, const uint32_t instr)
+{
 	is_running = false;
 }
 
-void load(struct VMContext* ctx, const uint32_t instr) {
+void load(struct VMContext* ctx, const uint32_t instr)
+{
 	const uint8_t dst = EXTRACT_B1(instr);
 	const uint8_t src = EXTRACT_B2(instr);
-	ctx->r[dst].value = ptr_m[src];
+	ctx->r[dst].value = EXTRACT_B0(ptr_m[ctx->r[src].value]);
 }
 
-void store(struct VMContext* ctx, const uint32_t instr) {
+void store(struct VMContext* ctx, const uint32_t instr)
+{
 	const uint8_t dst = EXTRACT_B1(instr);
 	const uint8_t src = EXTRACT_B2(instr);
-	ptr_m[dst] = EXTRACT_B0(ctx->r[src].value);
+	ptr_m[ctx->r[dst].value] = EXTRACT_B0(ctx->r[src].value);
 }
 
-void move(struct VMContext* ctx, const uint32_t instr) {
+void move(struct VMContext* ctx, const uint32_t instr)
+{
 	const uint8_t dst = EXTRACT_B1(instr);
 	const uint8_t src = EXTRACT_B2(instr);
 	ctx->r[dst].value = ctx->r[src].value;
 }
 
-void puti(struct VMContext* ctx, const uint32_t instr) {
+void puti(struct VMContext* ctx, const uint32_t instr)
+{
 	const uint8_t reg = EXTRACT_B1(instr);
 	const uint8_t imm = EXTRACT_B2(instr);
 	ctx->r[reg].value = imm;
 }
 
-void add(struct VMContext* ctx, const uint32_t instr) {
+void add(struct VMContext* ctx, const uint32_t instr)
+{
 	const uint8_t result = EXTRACT_B1(instr);
 	const uint8_t reg1 = EXTRACT_B2(instr);
 	const uint8_t reg2 = EXTRACT_B3(instr);
 	ctx->r[result].value = ctx->r[reg1].value + ctx->r[reg2].value;
 }
 
-void sub(struct VMContext* ctx, const uint32_t instr) {
+void sub(struct VMContext* ctx, const uint32_t instr)
+{
 	const uint8_t result = EXTRACT_B1(instr);
 	const uint8_t reg1 = EXTRACT_B2(instr);
 	const uint8_t reg2 = EXTRACT_B3(instr);
 	ctx->r[result].value = ctx->r[reg1].value - ctx->r[reg2].value;
 }
 
-void initFuncs(FunPtr *f, uint32_t cnt) {
+void gt(struct VMContext* ctx, const uint32_t instr)
+{
+	const uint8_t result = EXTRACT_B1(instr);
+	const uint8_t reg1 = EXTRACT_B2(instr);
+	const uint8_t reg2 = EXTRACT_B3(instr);
+	ctx->r[result].value = (ctx->r[reg1].value > ctx->r[reg2].value);
+}
+
+void ge(struct VMContext* ctx, const uint32_t instr)
+{
+	const uint8_t result = EXTRACT_B1(instr);
+	const uint8_t reg1 = EXTRACT_B2(instr);
+	const uint8_t reg2 = EXTRACT_B3(instr);
+	ctx->r[result].value = (ctx->r[reg1].value >= ctx->r[reg2].value);
+}
+
+void eq(struct VMContext* ctx, const uint32_t instr)
+{
+	const uint8_t result = EXTRACT_B1(instr);
+	const uint8_t reg1 = EXTRACT_B2(instr);
+	const uint8_t reg2 = EXTRACT_B3(instr);
+	ctx->r[result].value = (ctx->r[reg1].value == ctx->r[reg2].value);
+}
+
+void ite(struct VMContext* ctx, const uint32_t instr)
+{
+	const uint8_t reg = EXTRACT_B1(instr);
+	const uint8_t imm1 = EXTRACT_B2(instr);
+	const uint8_t imm2 = EXTRACT_B3(instr);
+	pc = ep + ((ctx->r[reg].value)?imm1:imm2);
+	pc--;
+}
+
+void jump(struct VMContext* ctx, const uint32_t instr)
+{
+	const uint8_t imm = EXTRACT_B1(instr);
+	pc = ep + imm;
+	pc--;
+}
+
+void puts_(struct VMContext* ctx, const uint32_t instr)
+{
+	const uint8_t reg = EXTRACT_B1(instr);
+	printf("%s", (char*)&ptr_m[ctx->r[reg].value]);
+}
+
+void gets_(struct VMContext* ctx, const uint32_t instr)
+{
+	const uint8_t reg = EXTRACT_B1(instr);
+	gets(&ptr_m[ctx->r[reg].value]);
+}
+
+void initFuncs(FunPtr *f, uint32_t cnt)
+{
     uint32_t i;
-    for (i = 0; i < cnt; i++) {
+    for (i = 0; i < cnt; i++)
+	{
         f[i] = NULL;
     }
 
     // TODO: initialize function pointers
-    // f[0x00] = halt;
-    // f[0x10] = load;
 	f[0x00] = halt;
 	f[0x10] = load;
 	f[0x20] = store;
@@ -81,31 +145,39 @@ void initFuncs(FunPtr *f, uint32_t cnt) {
 	f[0x40] = puti;
 	f[0x50] = add;
 	f[0x60] = sub;
+	f[0x70] = gt;
+	f[0x80] = ge;
+	f[0x90] = eq;
+	f[0xA0] = ite;
+	f[0xB0] = jump;
+	f[0xC0] = puts_;
+	f[0xD0] = gets_;
 }
 
 void initRegs(Reg *r, uint32_t cnt)
 {
     uint32_t i;
-    for (i = 0; i < cnt; i++) {
+    for (i = 0; i < cnt; i++)
+	{
         r[i].type = 0;
         r[i].value = 0;
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     VMContext vm;
     Reg r[NUM_REGS];
     FunPtr f[NUM_FUNCS];
     FILE* bytecode;
 	uint8_t instr_buffer[NUM_INSTR*4];
-    uint32_t* pc;
-	int i, j;
+	int i;
 	
 	
     // There should be at least one argument.
     if (argc < 2) usageExit();
 	
-	//ptr_m = (uint8_t *)malloc(8192);
+	ptr_m = (uint8_t *)malloc(8192);	
 	
     // Initialize registers.
     initRegs(r, NUM_REGS);
@@ -116,34 +188,54 @@ int main(int argc, char** argv) {
 
     // Load bytecode file
     bytecode = fopen(argv[1], "rb");
-    if (bytecode == NULL) {
+	fread(instr_buffer, 1, 1024, bytecode);
+    if (bytecode == NULL)
+	{
         perror("fopen");
         return 1;
     }
 		
-	i = 0;
-	pc = (uint32_t*)&instr_buffer;
-    while (is_running) {
+	ep = pc = (uint32_t*)&instr_buffer;
+    while (is_running)
+	{
         // TODO: Read 4-byte bytecode, and set the pc accordingly
-		fread(&instr_buffer[i*4], 1, 4, bytecode);
-		printf("Running instruction %d | ", i);
-		for (j = 0; j < 4; ++j)
-		{
-			printf("%.2x ", instr_buffer[i*4+j]);
-		}
-		printf("\n");
+#ifdef PRINT_INSTRUCTION
 		
-        stepVMContext(&vm, &pc);
-#ifdef DEBUG
-		for (j = 0; j < 10; ++j)
+		printf("Running instruction %d(%x) | ", (pc-ep), pc);
+		for (i = 0; i < 4; ++i)
 		{
-			printf("r%d: %d\n", j, r[j].value);
+			printf("%.2x ", instr_buffer[(pc-ep)*4+i]);
 		}
+		printf("\n");		
 #endif
 		
-		++i;
+        stepVMContext(&vm, &pc);
+#ifdef REG_DEBUG
+		for (i = 0; i < 10; ++i)
+		{
+			printf("r%d: %x\n", i, r[i].value);
+		}
+#endif
     }
+
+#ifdef MEMORY_DEBUG
+	printf("addr: 0x0\n");
+	for (i = 0; i < 50; ++i)
+	{
+		if (ptr_m[i]!=0) printf("%c", ptr_m[i]);
+		else printf("[NULL]\n");
+		if (!ptr_m[i] && !ptr_m[i+1]) break;
+	}
 	
+	printf("addr: 0x100\n");
+	for (i = 0x100; i < 0x100+50; ++i)
+	{
+		if (ptr_m[i]!=0) printf("%c", ptr_m[i]);
+		else printf("[NULL]\n");
+		if (!ptr_m[i] && !ptr_m[i+1]) break;
+	}
+#endif
+
 	free(ptr_m);
     fclose(bytecode);
 
