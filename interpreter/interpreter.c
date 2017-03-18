@@ -25,9 +25,9 @@ uint32_t *pc;
 
 void usageExit()
 {
-    // TODO: show usage
+	// TODO: show usage
 	printf("Usage: interpreter [bytecode FILE]\n");
-    exit(1);
+	exit(1);
 }
 
 void halt(struct VMContext* ctx, const uint32_t instr)
@@ -42,7 +42,7 @@ void load(struct VMContext* ctx, const uint32_t instr)
 	if (ctx->r[src].value >= SIZE_MEM)
 	{
 		error_h(HeapError);
-	}	
+	}
 	ctx->r[dst].value = EXTRACT_B0(ptr_m[ctx->r[src].value]);
 }
 
@@ -116,7 +116,7 @@ void ite(struct VMContext* ctx, const uint32_t instr)
 	const uint8_t reg = EXTRACT_B1(instr);
 	const uint8_t imm1 = EXTRACT_B2(instr);
 	const uint8_t imm2 = EXTRACT_B3(instr);
-	pc = ep + ((ctx->r[reg].value)?imm1:imm2);
+	pc = ep + ((ctx->r[reg].value) ? imm1 : imm2);
 	pc--;
 }
 
@@ -141,24 +141,24 @@ void gets_(struct VMContext* ctx, const uint32_t instr)
 {
 	const uint8_t reg = EXTRACT_B1(instr);
 	int idx = ctx->r[reg].value;
-	while(1)
-	{	
+	while (1)
+	{
 		if (idx >= SIZE_MEM)
-		{		
-	
+		{
+
 #ifdef GETS_DEBUG
-			printf("%d %d\n", idx, (idx-256));
+			printf("%d %d\n", idx, (idx - 256));
 #endif
 
 			error_h(HeapError);
 		}
 		ptr_m[idx++] = getchar();
-		if (ptr_m[idx-1] == 0xA) break;
-	}		
+		if (ptr_m[idx - 1] == 0xA) break;
+	}
 	ptr_m[--idx] = NULL;
-	
+
 #ifdef GETS_DEBUG
-	printf("%d %d\n", idx, (idx-256));	
+	printf("%d %d\n", idx, (idx - 256));
 	printf("%s\n", &ptr_m[ctx->r[reg].value]);
 #endif
 
@@ -167,13 +167,13 @@ void gets_(struct VMContext* ctx, const uint32_t instr)
 
 void initFuncs(FunPtr *f, uint32_t cnt)
 {
-    uint32_t i;
-    for (i = 0; i < cnt; i++)
+	uint32_t i;
+	for (i = 0; i < cnt; i++)
 	{
-        f[i] = NULL;
-    }
+		f[i] = NULL;
+	}
 
-    // TODO: initialize function pointers
+	// TODO: initialize function pointers
 	f[0x00] = halt;
 	f[0x10] = load;
 	f[0x20] = store;
@@ -192,48 +192,48 @@ void initFuncs(FunPtr *f, uint32_t cnt)
 
 void initRegs(Reg *r, uint32_t cnt)
 {
-    uint32_t i;
-    for (i = 0; i < cnt; i++)
+	uint32_t i;
+	for (i = 0; i < cnt; i++)
 	{
-        r[i].type = 0;
-        r[i].value = 0;
-    }
+		r[i].type = 0;
+		r[i].value = 0;
+	}
 }
 
 int main(int argc, char** argv)
 {
-    VMContext vm;
-    Reg r[NUM_REGS];
-    FunPtr f[NUM_FUNCS];
-    FILE* bytecode;
-	uint8_t instr_buffer[NUM_INSTR*4];
+	VMContext vm;
+	Reg r[NUM_REGS];
+	FunPtr f[NUM_FUNCS];
+	FILE* bytecode;
+	uint8_t instr_buffer[NUM_INSTR * 4];
 	int i;
 	int num_ins;
-		
-    // There should be at least one argument.
-    if (argc < 2) usageExit();
-	
-	ptr_m = (uint8_t *)malloc(SIZE_MEM);
-	
-    // Initialize registers.
-    initRegs(r, NUM_REGS);
-    // Initialize interpretation functions.
-    initFuncs(f, NUM_FUNCS);
-    // Initialize VM context.
-    initVMContext(&vm, NUM_REGS, NUM_FUNCS, r, f);
 
-    // Load bytecode file
-    bytecode = fopen(argv[1], "rb");		
-    if (bytecode == NULL)
+	// There should be at least one argument.
+	if (argc < 2) usageExit();
+
+	ptr_m = (uint8_t *)malloc(SIZE_MEM);
+
+	// Initialize registers.
+	initRegs(r, NUM_REGS);
+	// Initialize interpretation functions.
+	initFuncs(f, NUM_FUNCS);
+	// Initialize VM context.
+	initVMContext(&vm, NUM_REGS, NUM_FUNCS, r, f);
+
+	// Load bytecode file
+	bytecode = fopen(argv[1], "rb");
+	if (bytecode == NULL)
 	{
-        perror("fopen");
-        return 1;
-    }
-	
+		perror("fopen");
+		return 1;
+	}
+
 	fseek(bytecode, 0, SEEK_END);
-	num_ins = ftell(bytecode);	
+	num_ins = ftell(bytecode);
 	fseek(bytecode, 0, SEEK_SET);
-	if (num_ins%4 || num_ins > (NUM_INSTR*4))
+	if (num_ins % 4 || num_ins > (NUM_INSTR * 4))
 	{
 		error_h(InputError);
 	}
@@ -241,56 +241,56 @@ int main(int argc, char** argv)
 	{
 		error_h(InputError);
 	}
-	num_ins /= 4;	
-		
+	num_ins /= 4;
+
 	ep = pc = (uint32_t*)&instr_buffer;
-    while (is_running)
+	while (is_running)
 	{
-        // TODO: Read 4-byte bytecode, and set the pc accordingly
+		// TODO: Read 4-byte bytecode, and set the pc accordingly
 #ifdef PRINT_INSTRUCTION		
-		printf("Running instruction %d(%x) | ", (pc-ep), pc);
+		printf("Running instruction %d(%x) | ", (pc - ep), pc);
 		for (i = 0; i < 4; ++i)
 		{
-			printf("%.2x ", instr_buffer[(pc-ep)*4+i]);
+			printf("%.2x ", instr_buffer[(pc - ep) * 4 + i]);
 		}
-		printf("\n");		
+		printf("\n");
 #endif
 
 		if ((pc - ep) >= num_ins)
 		{
 			error_h(IpError);
 		}
-        stepVMContext(&vm, &pc);
-		
+		stepVMContext(&vm, &pc);
+
 #ifdef REG_DEBUG
 		for (i = 0; i < 10; ++i)
 		{
 			printf("r%d: %x\n", i, r[i].value);
 		}
 #endif
-    }
+	}
 
 #ifdef MEMORY_DEBUG
 	printf("addr: 0x0\n");
 	for (i = 0; i < 50; ++i)
 	{
-		if (ptr_m[i]!=0) printf("%c", ptr_m[i]);
+		if (ptr_m[i] != 0) printf("%c", ptr_m[i]);
 		else printf("[NULL]\n");
-		if (!ptr_m[i] && !ptr_m[i+1]) break;
+		if (!ptr_m[i] && !ptr_m[i + 1]) break;
 	}
-	
+
 	printf("addr: 0x100\n");
-	for (i = 0x100; i < 0x100+50; ++i)
+	for (i = 0x100; i < 0x100 + 50; ++i)
 	{
-		if (ptr_m[i]!=0) printf("%c", ptr_m[i]);
+		if (ptr_m[i] != 0) printf("%c", ptr_m[i]);
 		else printf("[NULL]\n");
-		if (!ptr_m[i] && !ptr_m[i+1]) break;
+		if (!ptr_m[i] && !ptr_m[i + 1]) break;
 	}
 #endif
 
 	free(ptr_m);
-    fclose(bytecode);
+	fclose(bytecode);
 
-    // Zero indicates normal termination.
-    return 0;
+	// Zero indicates normal termination.
+	return 0;
 }

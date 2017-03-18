@@ -12,7 +12,7 @@
 // FUNCTION IMPLEMENTATIONS:
 
 void error_h(int v)
-{	
+{
 	printf("\n\n***Error: ");
 	if (v == HeapError) printf("Invalid heap memory address\n");
 	else if (v == OpcodeError) printf("Invalid opcode\n");
@@ -25,35 +25,35 @@ void error_h(int v)
 // Defers decoding of register args to the called function.
 // dispatch :: VMContext -> uint32_t -> Effect()
 void dispatch(struct VMContext* ctx, const uint32_t instr) {
-    const uint8_t i = EXTRACT_B0(instr);
+	const uint8_t i = EXTRACT_B0(instr);
 	if (ctx->funtable[i] == NULL)
 	{
 		error_h(OpcodeError);
 	}
-    (*ctx->funtable[i])(ctx, instr);
+	(*ctx->funtable[i])(ctx, instr);
 }
 
 
 // Initializes a VMContext in-place.
 // initVMContext :: VMContext -> uint32_t -> uint32_t -> [Reg] -> [FunPtr] -> Effect()
 void initVMContext(struct VMContext* ctx, const uint32_t numRegs, const uint32_t numFuns, Reg* registers, FunPtr* funtable) {
-    ctx->numRegs    = numRegs;
-    ctx->numFuns    = numFuns;
-    ctx->r          = registers;
-    ctx->funtable   = funtable;
+	ctx->numRegs = numRegs;
+	ctx->numFuns = numFuns;
+	ctx->r = registers;
+	ctx->funtable = funtable;
 }
 
 
 // Reads an instruction, executes it, then steps to the next instruction.
 // stepVMContext :: VMContext -> uint32_t** -> Effect()
 void stepVMContext(struct VMContext* ctx, uint32_t** pc) {
-    // Read a 32-bit bytecode instruction.
-    uint32_t instr = **pc;
+	// Read a 32-bit bytecode instruction.
+	uint32_t instr = **pc;
 
-    // Dispatch to an opcode-handler.
-    dispatch(ctx, instr);
+	// Dispatch to an opcode-handler.
+	dispatch(ctx, instr);
 
-    // Increment to next instruction.
-    (*pc)++;
+	// Increment to next instruction.
+	(*pc)++;
 }
 

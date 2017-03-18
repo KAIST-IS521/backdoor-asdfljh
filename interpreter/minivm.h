@@ -30,19 +30,19 @@
 
 struct VMContext;
 
-typedef void (*FunPtr)(struct VMContext* ctx, const uint32_t);
+typedef void(*FunPtr)(struct VMContext* ctx, const uint32_t);
 
 //CHANGE THE INTERNALS OF THIS FOR YOUR OWN VM!
 typedef struct Reg {
-    uint32_t type;
-    uint32_t value;
+	uint32_t type;
+	uint32_t value;
 } Reg;
 
 typedef struct VMContext {
-    uint32_t numRegs;
-    uint32_t numFuns;
-    Reg* r;           // Ptr to register array.
-    FunPtr* funtable; // Ptr to a funptr table.
+	uint32_t numRegs;
+	uint32_t numFuns;
+	Reg* r;           // Ptr to register array.
+	FunPtr* funtable; // Ptr to a funptr table.
 } VMContext;
 
 
@@ -75,10 +75,10 @@ void dispatch(struct VMContext* ctx, const uint32_t instr);
 // Initializes a VMContext in-place.
 // initVMContext :: VMContext -> uint32_t -> uint32_t -> [Reg] -> [FunPtr] -> Effect()
 void initVMContext(struct VMContext* ctx,
-                      const uint32_t numRegs,
-                      const uint32_t numFuns,
-                                Reg* registers,
-                             FunPtr* funtable);
+	const uint32_t numRegs,
+	const uint32_t numFuns,
+	Reg* registers,
+	FunPtr* funtable);
 
 // Reads an instruction, executes it, then steps to the next instruction.
 // stepVMContext :: VMContext -> uint32_t** -> Effect()
