@@ -1,0 +1,95 @@
+puti r0, 1
+puti r1, 0
+move r3, r1
+puti r2, 0x53
+store r1, r2
+add r1, r1, r0
+puti r2, 0x74
+store r1, r2
+add r1, r1, r0
+puti r2, 0x72
+store r1, r2
+add r1, r1, r0
+puti r2, 0x69
+store r1, r2
+add r1, r1, r0
+puti r2, 0x6E
+store r1, r2
+add r1, r1, r0
+puti r2, 0x67
+store r1, r2
+add r1, r1, r0
+puti r2, 0x3A
+store r1, r2
+add r1, r1, r0
+puti r2, 0x20
+store r1, r2
+add r1, r1, r0
+puts r3
+puti r4, 255
+add r4, r4, r0
+gets r4
+puti r6, 0
+puti r7, 0
+load r8, r4
+eq r5, r8, r6
+ite r5, 39, 36
+add r4, r4, r0
+add r7, r7, r0
+jump 33
+puti r4, 255
+add r4, r4, r0
+puti r8, 1
+gt r9, r7, r8
+ite r9, 44, 63
+add r5, r4, r8
+load r11, r5
+puti r6, 0
+sub r10, r8, r0
+ge r9, r10, r6
+ite r9, 50, 58
+add r12, r4, r10
+load r13, r12
+gt r9, r13, r11
+ite r9, 54, 58
+add r14, r12, r0
+store r14, r13
+sub r10, r10, r0
+jump 48
+add r10, r10, r0
+add r12, r4, r10
+store r12, r11
+add r8, r8, r0
+jump 42
+puti r1, 0
+move r3, r1
+puti r2, 0x4F
+store r1, r2
+add r1, r1, r0
+puti r2, 0x75
+store r1, r2
+add r1, r1, r0
+puti r2, 0x74
+store r1, r2
+add r1, r1, r0
+puti r2, 0x70
+store r1, r2
+add r1, r1, r0
+puti r2, 0x75
+store r1, r2
+add r1, r1, r0
+puti r2, 0x74
+store r1, r2
+add r1, r1, r0
+puti r2, 0x3A
+store r1, r2
+add r1, r1, r0
+puti r2, 0x20
+store r1, r2
+add r1, r1, r0
+puts r3
+puti r15, 0xA
+add r16, r4, r7
+store r16, r15
+puts r4
+halt

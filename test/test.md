@@ -7,7 +7,8 @@ Mini language에 있는 14개의 opcode를 모두 사용하고 있어 각 opcode가 정상적으로 �
 
 ## Pseudocode in C
 
-'''c
+```c
+
 int main(void)
 {
 	string S;
@@ -36,7 +37,8 @@ int main(void)
 	printf("Output: %s\n", S);	
 	return 0;
 }
-'''
+
+```
 
 * INPUT/OUTPUT
   * INPUT: String S
