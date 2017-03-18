@@ -9,10 +9,12 @@
 #define NUM_REGS   (256)
 #define NUM_FUNCS  (256)
 #define NUM_INSTR  (256)
+#define SIZE_MEM   (8192)
 
 //#define REG_DEBUG 1
 //#define PRINT_INSTRUCTION 1
 //#define MEMORY_DEBUG 1
+//#define GETS_DEBUG 1
 
 // Global variable that indicates if the process is running.
 static bool is_running = true;
@@ -24,7 +26,7 @@ uint32_t *pc;
 void usageExit()
 {
     // TODO: show usage
-	printf("USAGE: interpreter [bytecode FILE]\n");
+	printf("Usage: interpreter [bytecode FILE]\n");
     exit(1);
 }
 
@@ -37,6 +39,10 @@ void load(struct VMContext* ctx, const uint32_t instr)
 {
 	const uint8_t dst = EXTRACT_B1(instr);
 	const uint8_t src = EXTRACT_B2(instr);
+	if (ctx->r[src].value >= SIZE_MEM)
+	{
+		error_h(HeapError);
+	}	
 	ctx->r[dst].value = EXTRACT_B0(ptr_m[ctx->r[src].value]);
 }
 
@@ -44,6 +50,10 @@ void store(struct VMContext* ctx, const uint32_t instr)
 {
 	const uint8_t dst = EXTRACT_B1(instr);
 	const uint8_t src = EXTRACT_B2(instr);
+	if (ctx->r[dst].value >= SIZE_MEM)
+	{
+		error_h(HeapError);
+	}
 	ptr_m[ctx->r[dst].value] = EXTRACT_B0(ctx->r[src].value);
 }
 
@@ -120,13 +130,39 @@ void jump(struct VMContext* ctx, const uint32_t instr)
 void puts_(struct VMContext* ctx, const uint32_t instr)
 {
 	const uint8_t reg = EXTRACT_B1(instr);
+	if (ctx->r[reg].value >= SIZE_MEM)
+	{
+		error_h(HeapError);
+	}
 	printf("%s", (char*)&ptr_m[ctx->r[reg].value]);
 }
 
 void gets_(struct VMContext* ctx, const uint32_t instr)
 {
 	const uint8_t reg = EXTRACT_B1(instr);
-	gets(&ptr_m[ctx->r[reg].value]);
+	int idx = ctx->r[reg].value;
+	while(1)
+	{	
+		if (idx >= SIZE_MEM)
+		{		
+	
+#ifdef GETS_DEBUG
+			printf("%d %d\n", idx, (idx-256));
+#endif
+
+			error_h(HeapError);
+		}
+		ptr_m[idx++] = getchar();
+		if (ptr_m[idx-1] == 0xA) break;
+	}		
+	ptr_m[--idx] = NULL;
+	
+#ifdef GETS_DEBUG
+	printf("%d %d\n", idx, (idx-256));	
+	printf("%s\n", &ptr_m[ctx->r[reg].value]);
+#endif
+
+	//gets(&ptr_m[ctx->r[reg].value]);
 }
 
 void initFuncs(FunPtr *f, uint32_t cnt)
@@ -172,12 +208,12 @@ int main(int argc, char** argv)
     FILE* bytecode;
 	uint8_t instr_buffer[NUM_INSTR*4];
 	int i;
-	
-	
+	int num_ins;
+		
     // There should be at least one argument.
     if (argc < 2) usageExit();
 	
-	ptr_m = (uint8_t *)malloc(8192);	
+	ptr_m = (uint8_t *)malloc(SIZE_MEM);
 	
     // Initialize registers.
     initRegs(r, NUM_REGS);
@@ -187,20 +223,31 @@ int main(int argc, char** argv)
     initVMContext(&vm, NUM_REGS, NUM_FUNCS, r, f);
 
     // Load bytecode file
-    bytecode = fopen(argv[1], "rb");
-	fread(instr_buffer, 1, 1024, bytecode);
+    bytecode = fopen(argv[1], "rb");		
     if (bytecode == NULL)
 	{
         perror("fopen");
         return 1;
     }
+	
+	fseek(bytecode, 0, SEEK_END);
+	num_ins = ftell(bytecode);	
+	fseek(bytecode, 0, SEEK_SET);
+	if (num_ins%4)
+	{
+		error_h(InputError);
+	}
+	if (fread(instr_buffer, 1, num_ins, bytecode) == -1)
+	{
+		error_h(InputError);
+	}
+	num_ins /= 4;	
 		
 	ep = pc = (uint32_t*)&instr_buffer;
     while (is_running)
 	{
         // TODO: Read 4-byte bytecode, and set the pc accordingly
-#ifdef PRINT_INSTRUCTION
-		
+#ifdef PRINT_INSTRUCTION		
 		printf("Running instruction %d(%x) | ", (pc-ep), pc);
 		for (i = 0; i < 4; ++i)
 		{
@@ -208,8 +255,13 @@ int main(int argc, char** argv)
 		}
 		printf("\n");		
 #endif
-		
+
+		if ((pc - ep) >= num_ins)
+		{
+			error_h(IpError);
+		}
         stepVMContext(&vm, &pc);
+		
 #ifdef REG_DEBUG
 		for (i = 0; i < 10; ++i)
 		{

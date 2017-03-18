@@ -19,6 +19,11 @@
 
 #define MVM_NUM_REGISTERS 16 // Default
 
+#define HeapError 0
+#define OpcodeError 1
+#define IpError 2
+#define InputError 3
+
 
 //---------------------------------------------------------
 // DATA STRUCTURES & TYPEDEFS:
@@ -60,6 +65,7 @@ static FunPtr mvm_function_table[MVM_NUM_FUNS];
 //---------------------------------------------------------
 // FUNCTIONS:
 
+void error_h(int v);
 
 // Selects and executes an opcode function from the function pointer table.
 // Passes the entire bytecode instruction as the argument.
