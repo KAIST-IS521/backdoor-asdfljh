@@ -5,17 +5,31 @@
 //-----------------------------------------------------------------------------
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "minivm.h"
-
 
 //---------------------------------------------------------
 // FUNCTION IMPLEMENTATIONS:
 
+void error_h(int v)
+{	
+	printf("\n\n***Error: ");
+	if (v == HeapError) printf("Invalid heap memory address\n");
+	else if (v == OpcodeError) printf("Invalid opcode\n");
+	else if (v == IpError) printf("Invalid instruction pointer\n");
+	else if (v == InputError) printf("Invalid input\n");
+	else printf("Unknown\n");
+	exit(1);
+}
 
 // Defers decoding of register args to the called function.
 // dispatch :: VMContext -> uint32_t -> Effect()
 void dispatch(struct VMContext* ctx, const uint32_t instr) {
     const uint8_t i = EXTRACT_B0(instr);
+	if (ctx->funtable[i] == NULL)
+	{
+		error_h(OpcodeError);
+	}
     (*ctx->funtable[i])(ctx, instr);
 }
 

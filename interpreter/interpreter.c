@@ -233,7 +233,7 @@ int main(int argc, char** argv)
 	fseek(bytecode, 0, SEEK_END);
 	num_ins = ftell(bytecode);	
 	fseek(bytecode, 0, SEEK_SET);
-	if (num_ins%4)
+	if (num_ins%4 || num_ins > (NUM_INSTR*4))
 	{
 		error_h(InputError);
 	}
