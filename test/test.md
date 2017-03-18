@@ -1,9 +1,10 @@
 # Description of test.mini
 
 ## Overview
-test.mini는 ASCII 문자열을 입력받은 후, 문자 단위로 오름차순 삽입 정렬(insertion sort)을 진행하여 그 결과를 출력해주는 프로그램이다.
-Mini language에 있는 14개의 opcode를 모두 사용하고 있어 각 opcode가 정상적으로 동작하는지 확인할 수 있다.
-**test.mini가 정상 동작한다 하여 opcode가 fully implemented되었다고 볼 수 없다.**
+test.mini는 ASCII 문자열을 입력받고, 문자 단위로 오름차순 삽입 정렬을 진행하여 그 결과를 출력해주는 프로그램이다.  
+Mini language에 있는 14개의 opcode를 모두 사용하고 있어 각 opcode가 정상적으로 동작하는지 확인할 수 있다.  
+  
+* **(test.mini가 정상 동작한다 하여 opcode가 fully implemented되었다고 볼 수 없다.)**
 
 ## Pseudocode in C
 
