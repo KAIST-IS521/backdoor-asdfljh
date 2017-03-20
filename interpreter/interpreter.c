@@ -129,12 +129,23 @@ void jump(struct VMContext* ctx, const uint32_t instr)
 
 void puts_(struct VMContext* ctx, const uint32_t instr)
 {
-	const uint8_t reg = EXTRACT_B1(instr);
-	if (ctx->r[reg].value >= SIZE_MEM)
+	const uint8_t reg = EXTRACT_B1(instr);	
+	int idx = ctx->r[reg].value;
+	if (idx >= SIZE_MEM)
 	{
 		error_h(HeapError);
 	}
-	printf("%s", (char*)&ptr_m[ctx->r[reg].value]);
+	while (1)
+	{
+		if (idx >= SIZE_MEM)
+		{
+			break;
+		}
+		if (ptr_m[idx] == NULL) break;
+		printf("%c", ptr_m[idx]);
+		++idx;
+	}
+	// printf("%s", (char*)&ptr_m[ctx->r[reg].value]);
 }
 
 void gets_(struct VMContext* ctx, const uint32_t instr)
